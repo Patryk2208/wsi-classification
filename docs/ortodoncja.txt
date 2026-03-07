@@ -1,0 +1,3 @@
+- cechami w problemie są tzw. kąty cefalometryczne wykorzystywane w ortodoncji
+- dla każdego pacjenta pomiary zostały wykonane w wieku ok. 9 lat (9_<nazwa_cechy>) oraz ok. 12 lat (12_<nazwa_cechy>)
+- Target: kolumna 'growth direction' oznaczająca kierunek wzrostu szczęki (w rozumieniu ortodontycznym) pomiędzy 12 a 18 rokiem życia. Możliwe wartości: 'horizontal', 'normal', 'vertical'
