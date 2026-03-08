@@ -1,6 +1,3 @@
-# config/preprocessing.yaml
-# Data preprocessing configuration
-
 # Data split
 test_size: 0.2
 random_state: 123456
@@ -24,6 +21,3 @@ scaling: standard    # standard, minmax, robust, or none
 
 # Target column
 target_column: growth direction  # Name of the target column
-
-# Feature engineering (optional)
-create_features: true
