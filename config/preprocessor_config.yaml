@@ -7,37 +7,23 @@ random_state: 123456
 
 # Missing values
 missing_threshold: 0.5  # Drop columns with >50% missing
-numeric_fill: median    # median or mean
-categorical_fill: mode  # mode or constant
+categorical_missing_method: mode  # mode or constant
+numerical_missing_method: median    # median or mean
 
 # Outliers
-outlier_method: cap     # cap, remove, or ignore
+outlier_method: cap     # cap, later: remove, or ignore
 outlier_threshold: 1.5  # IQR multiplier
 
-# Scaling
-scaling: standard       # standard, minmax, robust, or none
-
 # Encoding
-max_onehot_categories: 20  # Use one-hot if less than this, else target encoding
-drop_first: true          # Drop first category to avoid multicollinearity
+binary_encoding: label  # label
+categorical_encoding: onehot  # onehot, later: target
+max_onehot_unique_count: 20  # Use one-hot if less than this, else target encoding
+
+# Scaling
+scaling: standard    # standard, minmax, robust, or none
+
+# Target column
+target_column: growth direction  # Name of the target column
 
 # Feature engineering (optional)
 create_features: true
-
-# Column-specific settings (override defaults)
-column_settings:
-  age:
-    fill_method: median
-    outlier: true
-  income:
-    fill_method: median
-    outlier: true
-    scaling: robust  # override global scaling
-  education:
-    fill_method: mode
-    encode: label    # label, onehot, or target
-    ordinal_order: ['high_school', 'college', 'graduate']  # for label encoding
-  city:
-    fill_method: mode
-    encode: target    # use target encoding for high cardinality
-    smoothing: 10     # smoothing factor for target encoding

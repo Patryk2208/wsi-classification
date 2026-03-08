@@ -13,23 +13,29 @@ class DataPreprocessor:
         self.config = config or {}
 
         #config params and defaults
-        self.categorical_missing_method = self.config.get('categorical_missing_method', 'mode')
-        self.numerical_missing_method = self.config.get('numerical_missing_method', 'median')
-        self.outlier_method = self.config.get('outlier_method', 'cap')
-        self.binary_encoding_method = self.config.get('binary_encoding', 'label')
-        self.categorical_encoding_method = self.config.get('categorical_encoding', 'onehot')
-        self.scaling_method = self.config.get('scaling', 'standard')
+        self.test_size = self.config.get('test_size', 0.2)
+        self.random_state = self.config.get('random_state', 1234)
 
         self.missing_threshold = self.config.get('missing_threshold', 0.5)
-        self.random_state = self.config.get('random_state', 0)
-        self.test_size = self.config.get('test_size', 0.2)
-        self.target_col = self.config.get('target_col', None)
+        self.categorical_missing_method = self.config.get('categorical_missing_method', 'mode')
+        self.numerical_missing_method = self.config.get('numerical_missing_method', 'median')
+
+        self.outlier_method = self.config.get('outlier_method', 'cap')
+        self.outlier_threshold = self.config.get('outlier_threshold', 1.5)
+
+        self.binary_encoding_method = self.config.get('binary_encoding', 'label')
+        self.categorical_encoding_method = self.config.get('categorical_encoding', 'onehot')
+
+        self.scaling_method = self.config.get('scaling', 'standard')
+
+        self.target_col = self.config.get('target_col', "growth direction")
 
         # mappings for config
         self.scaler_mapping = {
             'standard': StandardScaler(),
             'minmax': MinMaxScaler(),
-            'robust': RobustScaler()
+            'robust': RobustScaler(),
+            "none": None
         }
         self.categorical_missing_method_mapping = {
             'mode': lambda col: col.mode()[0] if not col.mode().empty else None,
@@ -39,7 +45,7 @@ class DataPreprocessor:
             'mean': lambda col: col.mean(),
         }
 
-        self.scaler = self.scaler_mapping[self.scaling_method] or None
+        self.scaler = self.scaler_mapping[self.scaling_method]
         self.categorical_missing_method_pointer = self.categorical_missing_method_mapping[self.categorical_missing_method]
         self.numerical_missing_method_pointer = self.numerical_missing_method_mapping[self.numerical_missing_method]
 
@@ -68,8 +74,8 @@ class DataPreprocessor:
             Q1 = self.preprocessed_data[col].quantile(0.25)
             Q3 = self.preprocessed_data[col].quantile(0.75)
             IQR = Q3 - Q1
-            lower_bound = Q1 - 1.5 * IQR
-            upper_bound = Q3 + 1.5 * IQR
+            lower_bound = Q1 - self.outlier_threshold * IQR
+            upper_bound = Q3 + self.outlier_threshold * IQR
 
             self.preprocessed_data[col] = self.preprocessed_data[col].clip(lower_bound, upper_bound)
 
