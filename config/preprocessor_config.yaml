@@ -1,0 +1,43 @@
+# config/preprocessing.yaml
+# Data preprocessing configuration
+
+# Data split
+test_size: 0.2
+random_state: 123456
+
+# Missing values
+missing_threshold: 0.5  # Drop columns with >50% missing
+numeric_fill: median    # median or mean
+categorical_fill: mode  # mode or constant
+
+# Outliers
+outlier_method: cap     # cap, remove, or ignore
+outlier_threshold: 1.5  # IQR multiplier
+
+# Scaling
+scaling: standard       # standard, minmax, robust, or none
+
+# Encoding
+max_onehot_categories: 20  # Use one-hot if less than this, else target encoding
+drop_first: true          # Drop first category to avoid multicollinearity
+
+# Feature engineering (optional)
+create_features: true
+
+# Column-specific settings (override defaults)
+column_settings:
+  age:
+    fill_method: median
+    outlier: true
+  income:
+    fill_method: median
+    outlier: true
+    scaling: robust  # override global scaling
+  education:
+    fill_method: mode
+    encode: label    # label, onehot, or target
+    ordinal_order: ['high_school', 'college', 'graduate']  # for label encoding
+  city:
+    fill_method: mode
+    encode: target    # use target encoding for high cardinality
+    smoothing: 10     # smoothing factor for target encoding
