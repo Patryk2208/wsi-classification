@@ -25,6 +25,7 @@ class DataPreprocessor:
 
         self.binary_encoding_method = self.config.get('binary_encoding', 'label')
         self.categorical_encoding_method = self.config.get('categorical_encoding', 'onehot')
+        self.max_onehot_unique_count = self.config.get('max_onehot_unique_count', 20)
 
         self.scaling_method = self.config.get('scaling', 'standard')
 
