@@ -84,8 +84,8 @@ class DataPreprocessor:
         categorical_cols = self.preprocessed_data.select_dtypes(include=['object', 'category']).columns
 
         for col in categorical_cols:
-            if self.preprocessed_data[col].nunique() == 2:
-                # binary data: Label Encoding
+            if col == self.target_col or self.preprocessed_data[col].nunique() == 2:
+                # binary data and target column: Label Encoding
                 le = LabelEncoder()
                 self.preprocessed_data[col] = le.fit_transform(self.preprocessed_data[col].astype(str))
             else:
