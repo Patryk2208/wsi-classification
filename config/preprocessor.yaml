@@ -21,3 +21,15 @@ scaling: standard    # standard, minmax, robust, or none
 
 # Target column
 target_column: growth direction  # Name of the target column
+
+# Models
+standard_models: ['LogisticRegression', 'DecisionTree', 'SVM', 'KNN', 'NaiveBayes']
+ensemble_models: ['RandomForest', 'GradientBoosting', 'Stacking']
+
+stacking_estimators: ['LogisticRegression', 'DecisionTree', 'SVM', 'KNN', 'NaiveBayes']
+
+# Evaluation metrics
+metrics: ['accuracy', 'precision', 'recall', 'fallout', 'miss-rate', 'selectivity', 'f1', 'roc-auc', 'confusion-matrix']
+
+# Hyperparameter tuning
+fold_count: 5

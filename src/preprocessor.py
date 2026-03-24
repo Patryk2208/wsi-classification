@@ -1,16 +1,18 @@
+from types import SimpleNamespace
+
 import pandas as pd
 import numpy as np
+from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder, MinMaxScaler, RobustScaler
 
 
 class DataPreprocessor:
-    def __init__(self, df, config = None):
+    def __init__(self, df: DataFrame, config: SimpleNamespace):
         self.raw_data = df
         self.preprocessed_data = self.raw_data.copy()
-        self.X_train, self.X_test, self.y_train, self.y_test = None, None, None, None
-
-        self.config = config or {}
+        self.X, self.Y = None, None
+        self.config = config
 
         #config params and defaults
         self.test_size = self.config.get('test_size', 0.2)
@@ -50,12 +52,12 @@ class DataPreprocessor:
         self.categorical_missing_method_pointer = self.categorical_missing_method_mapping[self.categorical_missing_method]
         self.numerical_missing_method_pointer = self.numerical_missing_method_mapping[self.numerical_missing_method]
 
-    def preprocess(self):
+    def preprocess(self) -> tuple[DataFrame, DataFrame]:
         self.handle_missing_values()
         self.handle_outliers()
         self.encode_non_numeric_data()
-        self.split_data()
-        self.scale_data()
+        self.split()
+        return self.X, self.Y
 
     def handle_missing_values(self):
         for col in self.raw_data.columns:
@@ -97,21 +99,26 @@ class DataPreprocessor:
                     prefix=col
                 )
 
-    def split_data(self):
-        y = self.preprocessed_data[self.target_col]
-        X = self.preprocessed_data.drop(self.target_col, axis=1)
+    def split(self):
+        self.Y = self.preprocessed_data[self.target_col]
+        self.X = self.preprocessed_data.drop(self.target_col, axis=1)
 
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-            X,
-            y,
-            test_size=self.test_size,
-            random_state=self.random_state
-        )
 
-    def scale_data(self):
-        self.scaler.fit(self.X_train)
-        self.X_train = self.scaler.transform(self.X_train)
-        self.X_test = self.scaler.transform(self.X_test)
+    # def split_data(self):
+    #     y = self.preprocessed_data[self.target_col]
+    #     X = self.preprocessed_data.drop(self.target_col, axis=1)
+    #
+    #     self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+    #         X,
+    #         y,
+    #         test_size=self.test_size,
+    #         random_state=self.random_state
+    #     )
+    #
+    # def scale_data(self):
+    #     self.scaler.fit(self.X_train)
+    #     self.X_train = self.scaler.transform(self.X_train)
+    #     self.X_test = self.scaler.transform(self.X_test)
 
 
 
