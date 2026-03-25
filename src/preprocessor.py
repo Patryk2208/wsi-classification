@@ -3,8 +3,7 @@ from types import SimpleNamespace
 import pandas as pd
 import numpy as np
 from pandas import DataFrame
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder, MinMaxScaler, RobustScaler
+from sklearn.preprocessing import LabelEncoder
 
 
 class DataPreprocessor:
@@ -15,12 +14,6 @@ class DataPreprocessor:
         self.config = config
 
         # mappings for config
-        self.scaler_mapping = {
-            'standard': StandardScaler(),
-            'minmax': MinMaxScaler(),
-            'robust': RobustScaler(),
-            "none": None
-        }
         self.categorical_missing_method_mapping = {
             'mode': lambda col: col.mode()[0] if not col.mode().empty else None,
         }
@@ -29,7 +22,6 @@ class DataPreprocessor:
             'mean': lambda col: col.mean(),
         }
 
-        self.scaler = self.scaler_mapping[self.config.scaling_method]
         self.categorical_missing_method_pointer = self.categorical_missing_method_mapping[self.config.categorical_missing_method]
         self.numerical_missing_method_pointer = self.numerical_missing_method_mapping[self.config.numerical_missing_method]
 

@@ -26,24 +26,27 @@ class ModelOrchestrator:
         self.config = config
         self.X, self.Y = data
 
-        self.standard_model_mappings = {
+
+        self.model_mappings = {
             'LogisticRegression': LogisticRegression(),
             'DecisionTree': DecisionTreeClassifier(),
             'SVM': SVC(),
             'KNN': KNeighborsClassifier(),
             'NaiveBayes': GaussianNB(),
-        }
-        self.ensemble_model_mappings = {
             'RandomForest': RandomForestClassifier(),
-            'GradientBoosting': GradientBoostingClassifier(),
-            'Stacking': lambda : StackingClassifier(
-                estimators=[(v, self.standard_model_mappings[v]) for v in self.config.stacking_estimators]
+            'GradientBoosting': GradientBoostingClassifier()
+        }
+
+        self.stacking_model = {
+            'Stacking': StackingClassifier(
+                estimators=[(v, self.model_mappings[v]) for v in self.config.stacking_estimators],
+                final_estimator=self.model_mappings[self.config.stacking_final_estimator]
             )
         }
 
-        self.standard_models = [self.standard_model_mappings[m] for m in self.config.standard_models]
-        self.ensemble_models = [self.ensemble_model_mappings[m] for m in self.config.ensemble_models]
-        self.models = self.standard_models + self.ensemble_models
+        self.models = [self.model_mappings[m] for m in self.config.models]
+        if self.config.use_stacking:
+            self.models.append(self.stacking_model['Stacking'])
 
         self.tuning_methods_mappings = {
             'None': NoTuning(),

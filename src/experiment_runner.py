@@ -222,7 +222,10 @@ class Experiment:
                 f.write(f"{m.get('precision', 'N/A'):.4f} | ")
                 f.write(f"{m.get('recall', 'N/A'):.4f} | ")
                 f.write(f"{m.get('f1', 'N/A'):.4f} | ")
-                f.write(f"{m.get('roc_auc', 'N/A'):.4f} |\n")
+                if m.get('roc_auc', None) is not None:
+                    f.write(f"{m.get('roc_auc', 'N/A'):.4f} |\n")
+                else:
+                    f.write("N/A |\n")
 
             f.write("\n---\n\n")
 

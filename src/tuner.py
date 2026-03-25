@@ -3,7 +3,11 @@ from dataclasses import dataclass
 from typing import Any, Optional, List, Dict
 
 import numpy as np
+from numpy import ndarray
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_predict, cross_val_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
+
 
 @dataclass
 class TuningResult:
@@ -19,6 +23,8 @@ class TuningResult:
 
     @property
     def model_name(self) -> str:
+        if isinstance(self.model, Pipeline):
+            return self.model.steps[-1][1].__class__.__name__
         return self.model.__class__.__name__
 
     @property
@@ -30,6 +36,13 @@ class Tuner(ABC):
     """
     Performs tuning on the estimator. Returns Confusion Matrix.
     """
+    def __init__(self):
+        self.scaler_mapping = {
+            'standard': StandardScaler(),
+            'minmax': MinMaxScaler(),
+            'robust': RobustScaler()
+        }
+
     @abstractmethod
     def tune(self, config, x, y, estimator) -> TuningResult:
         pass
@@ -37,24 +50,49 @@ class Tuner(ABC):
 class NoTuning(Tuner):
     def tune(self, config, x, y, estimator) -> TuningResult:
         x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=config.test_size, random_state=config.random_state)
-        estimator.fit(x_train, y_train)
+
+        pipeline = estimator
+        if config.scaling_method != "none":
+            pipeline = Pipeline([
+                ('scaler', self.scaler_mapping[config.scaling_method]),
+                ('estimator', estimator)
+            ])
+
+        pipeline.fit(x_train, y_train)
         return TuningResult(
             model=estimator,
             config=config,
             tuner=self,
             y_true=y_test,
-            y_pred=estimator.predict(x_test),
-            y_proba=estimator.predict_proba(x_test) if hasattr(estimator, 'predict_proba') else None
+            y_pred=pipeline.predict(x_test),
+            y_proba=pipeline.predict_proba(x_test) if hasattr(estimator, 'predict_proba') else None
         )
 
 class CrossValidationTuning(Tuner):
     def tune(self, config, x, y, estimator) -> TuningResult:
-        y_pred = cross_val_predict(estimator, x, y, cv=config.cv_folds)
-        y_proba = cross_val_predict(estimator, x, y, cv=config.cv_folds, method='predict_proba') \
-            if hasattr(estimator, 'predict_proba') else None
-        cv_scores = cross_val_score(estimator, x, y, cv=config.cv_folds, scoring=config.cv_scoring_method)
+        pipeline = estimator
+        if config.scaling_method != "none":
+            pipeline = Pipeline([
+                ('scaler', self.scaler_mapping[config.scaling_method]),
+                ('estimator', estimator)
+            ])
+        if estimator.__class__.__name__ == 'StackingClassifier':
+            return TuningResult(
+                model=estimator,
+                config=config,
+                tuner=self,
+                y_true=y,
+                y_pred=ndarray(len(y)),
+                y_proba=None,
+                cv_scores=None
+            )
 
-        estimator.fit(x, y)
+        y_pred = cross_val_predict(pipeline, x, y, cv=config.cv_folds)
+        y_proba = cross_val_predict(pipeline, x, y, cv=config.cv_folds, method='predict_proba') \
+            if hasattr(estimator, 'predict_proba') else None
+        cv_scores = cross_val_score(pipeline, x, y, cv=config.cv_folds, scoring=config.cv_scoring_method)
+
+        pipeline.fit(x, y)
 
         return TuningResult(
             model=estimator,
@@ -68,11 +106,22 @@ class CrossValidationTuning(Tuner):
 
 class GridSearchTuning(Tuner):
     def tune(self, config, x, y, estimator) -> TuningResult:
+        pipeline = estimator
+        if config.scaling_method != "none":
+            pipeline = Pipeline([
+                ('scaler', self.scaler_mapping[config.scaling_method]),
+                ('estimator', estimator)
+            ])
+
         n = estimator.__class__.__name__
         g = getattr(config.grid_search_params, n).param_grid
+        prefixed_g = {
+            f'estimator__{k}': v
+            for k, v in g.items()
+        }
         grid = GridSearchCV(
-            estimator=estimator,
-            param_grid=g,
+            estimator=pipeline,
+            param_grid=prefixed_g,
             cv=config.cv_folds,
             n_jobs=-1,
             scoring=config.grid_search_scoring_method

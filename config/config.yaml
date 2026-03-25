@@ -23,18 +23,17 @@ scaling_method: standard    # standard, minmax, robust, or none
 target_column: growth direction  # Name of the target column
 
 # Models
-#standard_models: [LogisticRegression, DecisionTree, SVM, KNN, NaiveBayes]
-#ensemble_models: [RandomForest, GradientBoosting, Stacking]
-standard_models: [LogisticRegression]
-ensemble_models: []
+models: [RandomForest, GradientBoosting]
 
-stacking_estimators: [LogisticRegression, DecisionTree, SVM, KNN, NaiveBayes]
+use_stacking: False
+stacking_estimators: [LogisticRegression, DecisionTree, SVM]
+stacking_final_estimator: LogisticRegression
 
 # Evaluation metrics
 scoring_methods: [accuracy, precision, recall, f1, confusion_matrix, roc_auc]
 
 # Hyperparameter tuning
-tuning_methods: [None, CrossValidation, GridSearch]
+tuning_methods: [GridSearch] #[None, CrossValidation, GridSearch]
 cv_folds: 5
 cv_scoring_method: accuracy
 grid_search_scoring_method: accuracy
@@ -42,34 +41,38 @@ grid_search_scoring_method: accuracy
 grid_search_params:
   LogisticRegression:
     param_grid:
-      C: [0.01, 0.1, 1, 10, 100]
-      solver: ['lbfgs', 'saga']
+      C: [0.01, 0.1, 1, 10, 20]
+      solver: ['lbfgs', 'saga', 'newton-cg']
       max_iter: [1000]
 
   DecisionTreeClassifier:
     param_grid:
-      max_depth: [ 5, 10, 15, 20, None ]
+      max_depth: [ 5, 10, 15, 20 ]
       min_samples_split: [ 2, 5, 10 ]
       min_samples_leaf: [ 1, 2, 4 ]
       criterion: [ 'gini', 'entropy' ]
 
   SVC:
     param_grid:
-      C: [0.1, 1, 10, 100]
+      C: [0.1, 1, 2, 5]
       gamma: ['scale', auto, 0.01, 0.1, 1]
-      kernel: ['rbf', 'poly']
-      degree: [2, 3]  # for poly kernel
+      kernel: ['rbf']
+      class_weight: ['balanced']
 
   KNeighborsClassifier:
     param_grid:
-      n_neighbors: [3, 5, 7, 9, 11]
+      n_neighbors: [5, 10]
       weights: ['uniform', 'distance']
-      metric: ['euclidean', 'manhattan']
+      metric: ['euclidean']
+
+  GaussianNB:
+    param_grid:
+      var_smoothing: [1, 10, 1000]
 
   RandomForestClassifier:
     param_grid:
       n_estimators: [ 100, 200, 300 ]
-      max_depth: [ 5, 10, 15, None ]
+      max_depth: [  ]
       min_samples_split: [ 2, 5, 10 ]
       min_samples_leaf: [ 1, 2, 4 ]
       max_features: [ 'sqrt', 'log2' ]
@@ -81,3 +84,22 @@ grid_search_params:
       max_depth: [ 3, 5, 7 ]
       min_samples_split: [ 2, 5 ]
       subsample: [ 0.8, 1.0 ]
+
+  StackingClassifier:
+    param_grid:
+      final_estimator__C: [ 0.1, 1, 10 ]
+      stack_method: [ 'predict_proba', 'auto' ]
+      LogisticRegression__C: [ 0.05, 0.1, 0.2 ]
+      LogisticRegression__solver: [ 'lbfgs' ]
+      LogisticRegression__max_iter: [ 1000 ]
+      DecisionTree__max_depth: [ 3, 5, 7 ]
+      DecisionTree__min_samples_split: [ 10, 20 ]
+      DecisionTree__min_samples_leaf: [ 2 ]
+      DecisionTree__criterion: [ 'gini' ]
+      SVM__C: [ 0.5, 1, 1.5 ]
+      SVM__gamma: [ 'scale' ]
+      SVM__kernel: [ 'rbf' ]
+      SVM__class_weight: [ 'balanced' ]
+      SVM__probability: [ True ]
+
+
