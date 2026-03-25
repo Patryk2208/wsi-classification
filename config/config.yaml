@@ -1,0 +1,83 @@
+# Data split
+test_size: 0.2
+random_state: 123456
+
+# Missing values
+missing_threshold: 0.5  # Drop columns with >50% missing
+categorical_missing_method: mode  # mode or constant
+numerical_missing_method: median    # median or mean
+
+# Outliers
+outlier_method: cap     # cap, later: remove, or ignore
+outlier_threshold: 1.5  # IQR multiplier
+
+# Encoding
+binary_encoding: label  # label
+categorical_encoding: onehot  # onehot, later: target
+max_onehot_unique_count: 20  # Use one-hot if less than this, else target encoding
+
+# Scaling
+scaling_method: standard    # standard, minmax, robust, or none
+
+# Target column
+target_column: growth direction  # Name of the target column
+
+# Models
+#standard_models: [LogisticRegression, DecisionTree, SVM, KNN, NaiveBayes]
+#ensemble_models: [RandomForest, GradientBoosting, Stacking]
+standard_models: [LogisticRegression]
+ensemble_models: []
+
+stacking_estimators: [LogisticRegression, DecisionTree, SVM, KNN, NaiveBayes]
+
+# Evaluation metrics
+scoring_methods: [accuracy, precision, recall, f1, confusion_matrix, roc_auc]
+
+# Hyperparameter tuning
+tuning_methods: [None, CrossValidation, GridSearch]
+cv_folds: 5
+cv_scoring_method: accuracy
+grid_search_scoring_method: accuracy
+# model-specific parameters for Grid Search
+grid_search_params:
+  LogisticRegression:
+    param_grid:
+      C: [0.01, 0.1, 1, 10, 100]
+      solver: ['lbfgs', 'saga']
+      max_iter: [1000]
+
+  DecisionTreeClassifier:
+    param_grid:
+      max_depth: [ 5, 10, 15, 20, None ]
+      min_samples_split: [ 2, 5, 10 ]
+      min_samples_leaf: [ 1, 2, 4 ]
+      criterion: [ 'gini', 'entropy' ]
+
+  SVC:
+    param_grid:
+      C: [0.1, 1, 10, 100]
+      gamma: ['scale', auto, 0.01, 0.1, 1]
+      kernel: ['rbf', 'poly']
+      degree: [2, 3]  # for poly kernel
+
+  KNeighborsClassifier:
+    param_grid:
+      n_neighbors: [3, 5, 7, 9, 11]
+      weights: ['uniform', 'distance']
+      metric: ['euclidean', 'manhattan']
+
+  RandomForestClassifier:
+    param_grid:
+      n_estimators: [ 100, 200, 300 ]
+      max_depth: [ 5, 10, 15, None ]
+      min_samples_split: [ 2, 5, 10 ]
+      min_samples_leaf: [ 1, 2, 4 ]
+      max_features: [ 'sqrt', 'log2' ]
+
+  GradientBoostingClassifier:
+    param_grid:
+      n_estimators: [ 100, 200 ]
+      learning_rate: [ 0.01, 0.05, 0.1, 0.2 ]
+      max_depth: [ 3, 5, 7 ]
+      min_samples_split: [ 2, 5 ]
+      subsample: [ 0.8, 1.0 ]

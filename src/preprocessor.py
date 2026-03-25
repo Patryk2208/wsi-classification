@@ -14,25 +14,6 @@ class DataPreprocessor:
         self.X, self.Y = None, None
         self.config = config
 
-        #config params and defaults
-        self.test_size = self.config.get('test_size', 0.2)
-        self.random_state = self.config.get('random_state', 1234)
-
-        self.missing_threshold = self.config.get('missing_threshold', 0.5)
-        self.categorical_missing_method = self.config.get('categorical_missing_method', 'mode')
-        self.numerical_missing_method = self.config.get('numerical_missing_method', 'median')
-
-        self.outlier_method = self.config.get('outlier_method', 'cap')
-        self.outlier_threshold = self.config.get('outlier_threshold', 1.5)
-
-        self.binary_encoding_method = self.config.get('binary_encoding', 'label')
-        self.categorical_encoding_method = self.config.get('categorical_encoding', 'onehot')
-        self.max_onehot_unique_count = self.config.get('max_onehot_unique_count', 20)
-
-        self.scaling_method = self.config.get('scaling', 'standard')
-
-        self.target_col = self.config.get('target_col', "growth direction")
-
         # mappings for config
         self.scaler_mapping = {
             'standard': StandardScaler(),
@@ -48,9 +29,9 @@ class DataPreprocessor:
             'mean': lambda col: col.mean(),
         }
 
-        self.scaler = self.scaler_mapping[self.scaling_method]
-        self.categorical_missing_method_pointer = self.categorical_missing_method_mapping[self.categorical_missing_method]
-        self.numerical_missing_method_pointer = self.numerical_missing_method_mapping[self.numerical_missing_method]
+        self.scaler = self.scaler_mapping[self.config.scaling_method]
+        self.categorical_missing_method_pointer = self.categorical_missing_method_mapping[self.config.categorical_missing_method]
+        self.numerical_missing_method_pointer = self.numerical_missing_method_mapping[self.config.numerical_missing_method]
 
     def preprocess(self) -> tuple[DataFrame, DataFrame]:
         self.handle_missing_values()
@@ -77,8 +58,8 @@ class DataPreprocessor:
             Q1 = self.preprocessed_data[col].quantile(0.25)
             Q3 = self.preprocessed_data[col].quantile(0.75)
             IQR = Q3 - Q1
-            lower_bound = Q1 - self.outlier_threshold * IQR
-            upper_bound = Q3 + self.outlier_threshold * IQR
+            lower_bound = Q1 - self.config.outlier_threshold * IQR
+            upper_bound = Q3 + self.config.outlier_threshold * IQR
 
             self.preprocessed_data[col] = self.preprocessed_data[col].clip(lower_bound, upper_bound)
 
@@ -86,7 +67,7 @@ class DataPreprocessor:
         categorical_cols = self.preprocessed_data.select_dtypes(include=['object', 'category']).columns
 
         for col in categorical_cols:
-            if col == self.target_col or self.preprocessed_data[col].nunique() == 2:
+            if col == self.config.target_column or self.preprocessed_data[col].nunique() == 2:
                 # binary data and target column: Label Encoding
                 le = LabelEncoder()
                 self.preprocessed_data[col] = le.fit_transform(self.preprocessed_data[col].astype(str))
@@ -100,8 +81,8 @@ class DataPreprocessor:
                 )
 
     def split(self):
-        self.Y = self.preprocessed_data[self.target_col]
-        self.X = self.preprocessed_data.drop(self.target_col, axis=1)
+        self.Y = self.preprocessed_data[self.config.target_column]
+        self.X = self.preprocessed_data.drop(self.config.target_column, axis=1)
 
 
     # def split_data(self):
