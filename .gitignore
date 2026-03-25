@@ -9,3 +9,6 @@ models/*
 .idea
 
 docs/figures/*
+
+experiments
+mlflow.db

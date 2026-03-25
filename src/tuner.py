@@ -1,18 +1,30 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any, Optional, List, Dict
 
+import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_predict, cross_val_score
 
-
+@dataclass
 class TuningResult:
-    def __init__(self, model, config, tuner, y_true, y_pred, y_proba = None, cv_scores = None, best_params = None):
-        self.model = model
-        self.config = config
-        self.tuner = tuner
-        self.y_true = y_true
-        self.y_pred = y_pred
-        self.y_proba = y_proba
-        self.cv_scores = cv_scores
-        self.best_params = best_params
+    """Your existing TuningResult - kept as is"""
+    model: Any
+    config: Any
+    tuner: Any
+    y_true: np.ndarray
+    y_pred: np.ndarray
+    y_proba: Optional[np.ndarray] = None
+    cv_scores: Optional[List[float]] = None
+    best_params: Optional[Dict] = None
+
+    @property
+    def model_name(self) -> str:
+        return self.model.__class__.__name__
+
+    @property
+    def tuner_name(self) -> str:
+        return self.tuner.__class__.__name__
+
 
 class Tuner(ABC):
     """
