@@ -35,7 +35,7 @@ class ModelOrchestrator:
             'KNN': KNeighborsClassifier(),
             'NaiveBayes': GaussianNB(),
             'RandomForest': RandomForestClassifier(n_estimators=250, max_depth=12, max_features='sqrt', min_samples_leaf=5, min_samples_split=5),
-            'GradientBoosting': GradientBoostingClassifier(n_estimators=200, learning_rate=0.01, max_depth=3, min_samples_split=5, subsample=0.8)
+            'GradientBoosting': GradientBoostingClassifier(n_estimators=150, learning_rate=0.01, max_depth=3, min_samples_split=3, subsample=0.6)
         }
 
         self.stacking_model = {

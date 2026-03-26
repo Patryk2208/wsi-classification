@@ -23,7 +23,7 @@ scaling_method: standard    # standard, minmax, robust, or none
 target_column: growth direction  # Name of the target column
 
 # Models
-models: [] #[RandomForest, GradientBoosting]
+models: [] #[RandomForest, GradientBoosting, LogisticRegression, SVM] #[LogisticRegression, DecisionTree, SVM, KNN, NaiveBayes]
 
 use_stacking: True
 stacking_estimators: [RandomForest, GradientBoosting]
@@ -56,8 +56,8 @@ grid_search_params:
 
   SVC:
     param_grid:
-      C: [0.1, 1, 2, 5]
-      gamma: ['scale', auto, 0.01, 0.1, 1]
+      C: [0.1, 0.2]
+      gamma: [0.01]
       kernel: ['rbf']
       class_weight: ['balanced']
 
@@ -73,19 +73,19 @@ grid_search_params:
 
   RandomForestClassifier:
     param_grid:
-      n_estimators: [ 150, 200, 250 ]
-      max_depth: [ 8, 10, 12 ]
-      min_samples_split: [ 5, 7, 10 ]
-      min_samples_leaf: [ 3, 5 ]
+      n_estimators: [ 200 ]
+      max_depth: [ 12 ]
+      min_samples_split: [ 12 ]
+      min_samples_leaf: [ 8 ]
       max_features: [ 'sqrt' ]
 
   GradientBoostingClassifier:
     param_grid:
-      n_estimators: [ 200 ]
-      learning_rate: [ 0.01, 0.03, 0.05 ]
-      max_depth: [ 3, 5 ]
-      min_samples_split: [ 5 ]
-      subsample: [ 0.8 ]
+      n_estimators: [ 150 ]
+      learning_rate: [ 0.01 ]
+      max_depth: [ 3 ]
+      min_samples_split: [ 3 ]
+      subsample: [ 0.6 ]
 
   StackingClassifier:
     param_grid:

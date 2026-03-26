@@ -17,7 +17,7 @@ def main():
 
     mo = ModelOrchestrator(config, pre.preprocess())
     results = mo.experiment()
-    ex = Experiment(experiment_name="15-Trying-Smaller-Stacking", common_config=raw_config)
+    ex = Experiment(experiment_name="10-Trying-Stacking-grid-search", common_config=raw_config)
     for result in results:
         ex.add_result(result)
     ex.generate_report(output_dir="../docs/reports")

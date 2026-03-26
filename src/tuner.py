@@ -84,43 +84,48 @@ class NoTuning(Tuner):
 
 class CrossValidationTuning(Tuner):
     def tune(self, config, x, y, estimator) -> TuningResult:
+        x_train, x_test, y_train, y_test = train_test_split(
+            x, y,
+            test_size=config.test_size,
+            random_state=config.random_state
+        )
+
         pipeline = estimator
         if config.scaling_method != "none":
             pipeline = Pipeline([
                 ('scaler', self.scaler_mapping[config.scaling_method]),
                 ('estimator', estimator)
             ])
-        # if estimator.__class__.__name__ == 'StackingClassifier':
-        #     return TuningResult(
-        #         model=estimator,
-        #         config=config,
-        #         tuner=self,
-        #         y_true=y,
-        #         y_pred=ndarray(len(y)),
-        #         y_proba=None,
-        #         cv_scores=None
-        #     )
         rkf = RepeatedKFold(n_splits=config.cv_folds, n_repeats=config.grid_search_repeats, random_state=config.random_state)
 
-        y_pred = cross_val_predict(pipeline, x, y, cv=config.cv_folds, n_jobs=-1)
-        y_proba = cross_val_predict(pipeline, x, y, cv=config.cv_folds, method='predict_proba', n_jobs=-1) \
-            if hasattr(estimator, 'predict_proba') else None
-        cv_scores = cross_val_score(pipeline, x, y, cv=rkf, scoring=config.cv_scoring_method, n_jobs=-1)
+        y_pred_train = cross_val_predict(pipeline, x_train, y_train, cv=config.cv_folds, n_jobs=-1)
+        y_proba_train = cross_val_predict(pipeline, x_train, y_train, cv=config.cv_folds, method='predict_proba',
+                                          n_jobs=-1) if hasattr(estimator, 'predict_proba') else None
+        cv_scores = cross_val_score(pipeline, x_train, y_train, cv=rkf, scoring=config.cv_scoring_method, n_jobs=-1)
 
-        pipeline.fit(x, y)
+        pipeline.fit(x_train, y_train)
+
+        y_pred_test = pipeline.predict(x_test)
+        y_proba_test = pipeline.predict_proba(x_test) if hasattr(pipeline, 'predict_proba') else None
 
         return TuningResult(
             model=estimator,
             config=config,
             tuner=self,
-            y_true=y,
-            y_pred=y_pred,
-            y_proba=y_proba,
+            y_true=y_test,
+            y_pred=y_pred_test,
+            y_proba=y_proba_test,
             cv_scores=cv_scores
         )
 
 class GridSearchTuning(Tuner):
     def tune(self, config, x, y, estimator) -> TuningResult:
+        x_train, x_test, y_train, y_test = train_test_split(
+            x, y,
+            test_size=config.test_size,
+            random_state=config.random_state
+        )
+
         pipeline = estimator
         if config.scaling_method != "none":
             pipeline = Pipeline([
@@ -144,16 +149,16 @@ class GridSearchTuning(Tuner):
             return_train_score=True,
             refit=refit_strategy
         )
-        grid.fit(x, y)
+        grid.fit(x_train, y_train)
 
-        y_pred = grid.predict(x)
-        y_proba = grid.predict_proba(x) if hasattr(grid, 'predict_proba') else None
+        y_pred = grid.predict(x_test)
+        y_proba = grid.predict_proba(x_test) if hasattr(grid, 'predict_proba') else None
 
         return TuningResult(
             model=grid.best_estimator_,
             config=config,
             tuner=self,
-            y_true=y,
+            y_true=y_test,
             y_pred=y_pred,
             y_proba=y_proba,
             cv_scores=grid.cv_results_['mean_test_score'],
