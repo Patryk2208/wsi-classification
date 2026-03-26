@@ -23,20 +23,22 @@ scaling_method: standard    # standard, minmax, robust, or none
 target_column: growth direction  # Name of the target column
 
 # Models
-models: [RandomForest, GradientBoosting]
+models: [] #[RandomForest, GradientBoosting]
 
-use_stacking: False
-stacking_estimators: [LogisticRegression, DecisionTree, SVM]
+use_stacking: True
+stacking_estimators: [RandomForest, GradientBoosting]
 stacking_final_estimator: LogisticRegression
 
 # Evaluation metrics
 scoring_methods: [accuracy, precision, recall, f1, confusion_matrix, roc_auc]
 
 # Hyperparameter tuning
-tuning_methods: [GridSearch] #[None, CrossValidation, GridSearch]
+tuning_methods: [CrossValidation] #[None, CrossValidation, GridSearch]
 cv_folds: 5
 cv_scoring_method: accuracy
+
 grid_search_scoring_method: accuracy
+grid_search_repeats: 10
 # model-specific parameters for Grid Search
 grid_search_params:
   LogisticRegression:
@@ -71,35 +73,24 @@ grid_search_params:
 
   RandomForestClassifier:
     param_grid:
-      n_estimators: [ 100, 200, 300 ]
-      max_depth: [  ]
-      min_samples_split: [ 2, 5, 10 ]
-      min_samples_leaf: [ 1, 2, 4 ]
-      max_features: [ 'sqrt', 'log2' ]
+      n_estimators: [ 150, 200, 250 ]
+      max_depth: [ 8, 10, 12 ]
+      min_samples_split: [ 5, 7, 10 ]
+      min_samples_leaf: [ 3, 5 ]
+      max_features: [ 'sqrt' ]
 
   GradientBoostingClassifier:
     param_grid:
-      n_estimators: [ 100, 200 ]
-      learning_rate: [ 0.01, 0.05, 0.1, 0.2 ]
-      max_depth: [ 3, 5, 7 ]
-      min_samples_split: [ 2, 5 ]
-      subsample: [ 0.8, 1.0 ]
+      n_estimators: [ 200 ]
+      learning_rate: [ 0.01, 0.03, 0.05 ]
+      max_depth: [ 3, 5 ]
+      min_samples_split: [ 5 ]
+      subsample: [ 0.8 ]
 
   StackingClassifier:
     param_grid:
-      final_estimator__C: [ 0.1, 1, 10 ]
-      stack_method: [ 'predict_proba', 'auto' ]
-      LogisticRegression__C: [ 0.05, 0.1, 0.2 ]
-      LogisticRegression__solver: [ 'lbfgs' ]
-      LogisticRegression__max_iter: [ 1000 ]
-      DecisionTree__max_depth: [ 3, 5, 7 ]
-      DecisionTree__min_samples_split: [ 10, 20 ]
-      DecisionTree__min_samples_leaf: [ 2 ]
-      DecisionTree__criterion: [ 'gini' ]
-      SVM__C: [ 0.5, 1, 1.5 ]
-      SVM__gamma: [ 'scale' ]
-      SVM__kernel: [ 'rbf' ]
-      SVM__class_weight: [ 'balanced' ]
-      SVM__probability: [ True ]
+      final_estimator__C: [ 0.1 ]
+      stack_method: [ 'predict_proba' ]
+
 
 

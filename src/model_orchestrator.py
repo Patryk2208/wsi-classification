@@ -15,6 +15,7 @@ import warnings
 from sklearn.exceptions import ConvergenceWarning
 
 warnings.filterwarnings('ignore', category=ConvergenceWarning)
+warnings.filterwarnings("ignore", category=UserWarning, module="sklearn.utils.parallel")
 
 """
 Orchestrates the training and evaluation of the model.
@@ -28,13 +29,13 @@ class ModelOrchestrator:
 
 
         self.model_mappings = {
-            'LogisticRegression': LogisticRegression(),
+            'LogisticRegression': LogisticRegression(C=0.1),
             'DecisionTree': DecisionTreeClassifier(),
-            'SVM': SVC(),
+            'SVM': SVC(C=1, class_weight='balanced', gamma='scale', kernel='rbf', probability=True),
             'KNN': KNeighborsClassifier(),
             'NaiveBayes': GaussianNB(),
-            'RandomForest': RandomForestClassifier(),
-            'GradientBoosting': GradientBoostingClassifier()
+            'RandomForest': RandomForestClassifier(n_estimators=250, max_depth=12, max_features='sqrt', min_samples_leaf=5, min_samples_split=5),
+            'GradientBoosting': GradientBoostingClassifier(n_estimators=200, learning_rate=0.01, max_depth=3, min_samples_split=5, subsample=0.8)
         }
 
         self.stacking_model = {

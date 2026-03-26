@@ -187,7 +187,7 @@ class Experiment:
         Generate comprehensive markdown report with HITL section.
         Call this after all results are added.
         """
-        output_path = Path(output_dir) / f"{self.experiment_name}_report.md"
+        output_path = Path(output_dir) / f"{self.experiment_name}.md"
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         with open(output_path, 'w') as f:

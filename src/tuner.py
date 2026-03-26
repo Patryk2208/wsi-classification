@@ -4,7 +4,8 @@ from typing import Any, Optional, List, Dict
 
 import numpy as np
 from numpy import ndarray
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_predict, cross_val_score
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_predict, cross_val_score, learning_curve, \
+    RepeatedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 
@@ -47,6 +48,19 @@ class Tuner(ABC):
     def tune(self, config, x, y, estimator) -> TuningResult:
         pass
 
+def refit_strategy(cv_results):
+    mean_test = cv_results["mean_test_score"]
+    mean_train = cv_results["mean_train_score"]
+
+    gap = mean_train - mean_test
+
+    alpha = 0.5  # how strongly you penalize overfitting
+
+    custom_score = mean_test - alpha * gap
+
+    return np.argmax(custom_score)
+
+
 class NoTuning(Tuner):
     def tune(self, config, x, y, estimator) -> TuningResult:
         x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=config.test_size, random_state=config.random_state)
@@ -76,21 +90,22 @@ class CrossValidationTuning(Tuner):
                 ('scaler', self.scaler_mapping[config.scaling_method]),
                 ('estimator', estimator)
             ])
-        if estimator.__class__.__name__ == 'StackingClassifier':
-            return TuningResult(
-                model=estimator,
-                config=config,
-                tuner=self,
-                y_true=y,
-                y_pred=ndarray(len(y)),
-                y_proba=None,
-                cv_scores=None
-            )
+        # if estimator.__class__.__name__ == 'StackingClassifier':
+        #     return TuningResult(
+        #         model=estimator,
+        #         config=config,
+        #         tuner=self,
+        #         y_true=y,
+        #         y_pred=ndarray(len(y)),
+        #         y_proba=None,
+        #         cv_scores=None
+        #     )
+        rkf = RepeatedKFold(n_splits=config.cv_folds, n_repeats=config.grid_search_repeats, random_state=config.random_state)
 
-        y_pred = cross_val_predict(pipeline, x, y, cv=config.cv_folds)
-        y_proba = cross_val_predict(pipeline, x, y, cv=config.cv_folds, method='predict_proba') \
+        y_pred = cross_val_predict(pipeline, x, y, cv=config.cv_folds, n_jobs=-1)
+        y_proba = cross_val_predict(pipeline, x, y, cv=config.cv_folds, method='predict_proba', n_jobs=-1) \
             if hasattr(estimator, 'predict_proba') else None
-        cv_scores = cross_val_score(pipeline, x, y, cv=config.cv_folds, scoring=config.cv_scoring_method)
+        cv_scores = cross_val_score(pipeline, x, y, cv=rkf, scoring=config.cv_scoring_method, n_jobs=-1)
 
         pipeline.fit(x, y)
 
@@ -112,6 +127,7 @@ class GridSearchTuning(Tuner):
                 ('scaler', self.scaler_mapping[config.scaling_method]),
                 ('estimator', estimator)
             ])
+        rkf = RepeatedKFold(n_splits=config.cv_folds, n_repeats=config.grid_search_repeats, random_state=config.random_state)
 
         n = estimator.__class__.__name__
         g = getattr(config.grid_search_params, n).param_grid
@@ -122,9 +138,11 @@ class GridSearchTuning(Tuner):
         grid = GridSearchCV(
             estimator=pipeline,
             param_grid=prefixed_g,
-            cv=config.cv_folds,
+            cv=rkf,
             n_jobs=-1,
-            scoring=config.grid_search_scoring_method
+            scoring=config.grid_search_scoring_method,
+            return_train_score=True,
+            refit=refit_strategy
         )
         grid.fit(x, y)
 
